@@ -25,7 +25,7 @@ type:
 Examples:
 - Beta 0.2 (0.0.2)
 - indev 0.4 (-1.0.4)
-- release 1.0 (1.1.0
+- release 1.0 (1.1.0)
 
 *Beta versions will not be included in the official release list once the project enters the indev or stable release phase.*
 
