@@ -1,4 +1,4 @@
-# maze_runners
+# Maze Runners
 
 A game where you try to beat an endless number of mazes.
 
