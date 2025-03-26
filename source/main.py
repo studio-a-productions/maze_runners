@@ -609,7 +609,7 @@ def main():
             screen.blit(popup_surf, popup_screen)
 
 
-        # I know it should be an if, else if statement, but this is for render layers. (solution: create a layer-render method; just some more work, yey!)
+        # I know it should be an if, else if statement (with the if divine-state == "sustain"), but this is for render layers. (solution: create a layer-render method; just some more work, yey!)
         if divine_state == "animating":
             orb_pos = interpolate_path(divine_path, divine_anim_progress, cell_size)
             if orb_pos is not None:

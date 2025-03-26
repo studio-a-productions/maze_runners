@@ -33,7 +33,7 @@ Examples:
 - indev 0.4 (-1.0.4)
 - release 1.0 (1.1.0)
 
-> *Beta versions will not be included in the official release list once the project enters the indev or stable release phase.*
+> *Beta versions and/or branches might not be included in the final release list once the project moves to the indev or stable phase.*
 
 ## Source
 
@@ -70,19 +70,28 @@ git clone https://github.com/studio-a-productions/maze_runners.git
 
 We welcome feature suggestions!
 
-You can start a discussion in the repository, and if your idea is approved, it might be added to the game. Of course, you'll receive credit for your *contribution*!
+You can Suggest Features in 2 ways:
+
+1.  **Quick and Easy:**
+    
+    Go to '`Issues`' in the repository and write your suggestion.
+
+2.  **Community:**
+
+    You can start a `Discussion` in the repository, where everyone can give you their own thoughts on the feature. **Note:** `Discussions` may take longer to be reviewed compared to direct issue submissions.
+
+And if your idea is approved, it might be added to the game. Of course, you'll receive credit for your *contribution*!
 
 ## Bug Reports
 
-Found a bug or facing issues? Report them **as soon as possible!**
+Found a bug or facing issues? Report it in the '`Issues`' tab as soon as possible!
 
-We aim to keep Maze Runners *bug-free*. If your reported issue is not resolved in upcoming updates, you can:
+We aim to keep Maze Runners *bug-free*. If your reported issue is not resolved in upcoming updates and doesn't have the `wontfix` label, you can:
 
 1. Start a discussion about it.
 
 2. Contribute by fixing it yourself and submitting a pull request.
 
----
 
 # Contribution 
 > A guide to contributing to the project. (Coming soon!)
