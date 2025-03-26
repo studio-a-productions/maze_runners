@@ -258,7 +258,7 @@ def draw_maze(maze, screen, cell_size, exit_cell, cam_offset, zoom):
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption("Maze Runner v0.0.2") # type.release.patch (type: beta 0/indev -1/release 1+)
+    pygame.display.set_caption("Maze Runners v0.0.2") # type.version.patch (type: beta 0/indev -1/release 1+)
     clock = pygame.time.Clock()
     font = pygame.font.SysFont(None, 24)
 
