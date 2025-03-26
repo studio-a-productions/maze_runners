@@ -4,9 +4,9 @@ A game where you try to beat an endless number of mazes.
 
 ## BETA Releases
 
-The game is currently compiled as Beta 0.2 (version 0.0.2).
+Beta releases will be stored as different branches, but may be deleted. The source can be found in the `source` folder. 
 
-The provided source code is now in sync with Beta 0.3 (version 0.0.3) and may differ from the compiled release.
+The game is currently compiled as Beta 0.2 (version 0.0.2).
 
 ### Version Naming Convention
 
