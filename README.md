@@ -6,7 +6,7 @@ A game where you try to beat an endless number of mazes.
 
 The game is currently compiled as Beta 0.2 (version 0.0.2).
 
-The provided source code is an early development version of 0.0.3 and may differ from the compiled release.
+The provided source code is now in sync with Beta 0.3 (version 0.0.3) and may differ from the compiled release.
 
 ### Version Naming Convention
 
@@ -18,7 +18,7 @@ type:
 
 - beta (0.x.x) - Beta versions
 
-- indev (-1.x.x) - In-development versions
+- indev (-1.x.x and beyond) - In-development versions
 
 - release (1.x.x and beyond) - Stable releases
 
@@ -34,3 +34,10 @@ Examples:
 The game is written in Python and developed using VS Code, but other editors should work fine.
 
 Please read the license carefully before using or modifying the code.
+
+You can download the main branch using:
+```bash
+
+git clone https://github.com/studio-a-productions/maze_runners.git
+
+```
