@@ -100,7 +100,25 @@ We aim to keep Maze Runners *bug-free*. If your reported issue is not resolved i
 
 In `Beta 0.3`, we wanted to focus on adding more powerups and features to the game. For this update, we've fixed the `Divine Eyes` powerup.
 
-Also we've deployed a new, handy powerup: `Angelic Shield`, which should spawn everywhere except the `small` levels.
+Also we've deployed a new, handy powerup: `Angelic Shield`, which should spawn everywhere except the `small` levels, and uses a *generated* **texture**.
+
+### BETA 0.4
+
+In this update, we'll focus on adding more gameplay elements to the mazes themselves.
+
+This update will include:
+
+- new trap type
+
+- new healing station type
+
+- new maze algorythem
+
+- new map type
+
+### BETA 0.5 and above
+
+There are no plans yet for BETA 0.5, and above, at the moment.
 
 # Contribution 
 > A guide to contributing to the project. (Coming soon!)
