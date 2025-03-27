@@ -92,6 +92,15 @@ We aim to keep Maze Runners *bug-free*. If your reported issue is not resolved i
 
 2. Contribute by fixing it yourself and submitting a pull request.
 
+## Roadmap
+
+>Maze Runners roadmap for the BETA releases
+
+### BETA 0.3
+
+In `Beta 0.3`, we wanted to focus on adding more powerups and features to the game. For this update, we've fixed the `Divine Eyes` powerup.
+
+Also we've deployed a new, handy powerup: `Angelic Shield`, which should spawn everywhere except the `small` levels.
 
 # Contribution 
 > A guide to contributing to the project. (Coming soon!)

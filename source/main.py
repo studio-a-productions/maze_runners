@@ -37,6 +37,7 @@ HEAL_TEXT_COLOR = (0, 0, 255)   # healing
 PROJECTILE_COLOR = (255, 0, 0)  # red (same as trap)
 YELLOW = (255, 255, 0)          # Divine Eyes orb
 LIGHT_GRAY = (200, 200, 200)    # divine path
+LIGHT_BLUE = (50, 180, 255)
 
 # --- Gameplay ---
 PLAYER_START_HEALTH = 100
@@ -50,12 +51,19 @@ TRAP_PROBABILITY_BOSS = 0.05
 # only for TRAP, not for PROJECTILE
 NORMAL_CRIT_CHANCE = 0.10
 BOSS_CRIT_CHANCE   = 0.25
-                                # units
+                                # _units
 PROJECTILE_COOLDOWN = 5000      # ms
 PROJECTILE_SPEED_FACTOR = 1.5   # cells per second (cells/s)
 
 DIVINE_EYES_SPAWN_CHANCE = 0.001
 MAX_DIVINE_EYES = 2
+
+ANGELIC_SHIELD_CHANCE_M = 0.0025
+ANGELIC_SHIELD_CHANCE_L = 0.008
+ANGELIC_SHIELD_SIZE = 2
+ANGELIC_SHIELD_BASE_HEALTH = 100 # + health of player
+ANGELIC_SHIELD_DURATION = 10000 # ms
+ANGELIC_SHIELD_TEXTURE_SIZE = 64
 
 # FOG the FROG (perlin noise)
 FOG_RADIUS_CELLS = 6                # Fog radius in number of cells
@@ -127,6 +135,82 @@ def interpolate_path(path, progress, cell_size):
             return (x, y)
         acc += d
     return points[-1]
+
+def create_fresnel_texture(size, radius, F0=0.04, power=5, base_color=(200, 200, 255)):
+    """
+    Create an RGBA texture as a NumPy array displaying a circle with a Fresnel (rim-lighting) effect.
+    
+    Arguments:
+      size       -- the width/height in pixels of the square texture.
+      radius     -- the radius of the circle/sphere (in pixels; typically size/2).
+      F0         -- the base reflectance (typical value for dielectrics is around 0.04).
+      power      -- the exponent used in Schlick’s approximation (controls the sharpness of the rim effect).
+      base_color -- the base RGB color tuple for the circle.
+    
+    Returns:
+      A (size x size x 4) uint8 NumPy array representing the RGBA texture.
+    """
+    # Create a coordinate grid that runs from -radius to +radius
+    x = np.linspace(-radius, radius, size)
+    y = np.linspace(-radius, radius, size)
+    xx, yy = np.meshgrid(x, y)
+
+    # Distance from center for each pixel
+    r = np.sqrt(xx**2 + yy**2)
+
+    # Initialize texture array: shape (size, size, 4) for RGBA, defaulting to 0 (transparent)
+    texture = np.zeros((size, size, 4), dtype=np.uint8)
+
+    # Create a boolean mask for pixels inside the circle
+    mask = r <= radius
+
+    # For points within the circle, compute the z value from the sphere equation:
+    # x^2 + y^2 + z^2 = radius^2  -->  z = sqrt(radius^2 - x^2 - y^2)
+    z = np.zeros_like(r)
+    z[mask] = np.sqrt(radius**2 - r[mask]**2)
+
+    # Assume a viewer looking straight on: view direction = (0, 0, 1).
+    # For a sphere, the surface normal at a point (x, y, z) is (x, y, z) normalized.
+    # Notice that (x, y, z) for a perfect sphere satisfies sqrt(x^2+y^2+z^2) = radius.
+    # Thus, the dot product = n · (0,0,1) = z / radius.
+    dot = np.zeros_like(r)
+    dot[mask] = z[mask] / radius
+
+    # Apply Schlick’s approximation for the Fresnel effect.
+    # Fresnel factor: F = F0 + (1 - F0) * (1 - dot(v, n))^power
+    fresnel = np.zeros_like(r)
+    fresnel[mask] = F0 + (1 - F0) * ((1 - dot[mask]) ** power)
+
+    # Use the Fresnel factor to modulate the base color.
+    # Here, each channel is multiplied by the fresnel term.
+    for i in range(3):
+        # Compute the intensity-modulated value for the base color
+        channel = base_color[i]
+        # Create an array that holds the color modulated by the Fresnel effect
+        value = np.zeros_like(r)
+        value[mask] = channel * fresnel[mask]
+        # Clamp values between 0 and 255 and place them into the texture
+        texture[..., i] = np.clip(value, 0, 255).astype(np.uint8)
+
+    # Set the alpha channel to 255 (opaque) inside the circle, 0 outside.
+    texture[..., 3][mask] = 255
+
+    return texture.astype(np.uint8)
+
+def get_scaled_texture(base_surface, desired_diameter):
+    """
+    Scale the constant Fresnel texture (base_surface) to the desired diameter.
+    
+    Arguments:
+      base_surface     --> The precomputed Fresnel effect Pygame surface.
+      desired_diameter --> The target width and height in pixels for the circle.
+      
+    Returns:
+      A new Pygame surface, scaled to (desired_diameter x desired_diameter).
+    """
+    return pygame.transform.smoothscale(base_surface, (desired_diameter, desired_diameter))
+
+
 
 # Maze + generation
 
@@ -202,6 +286,19 @@ def generate_projectile_traps(maze, proj_chance):
                             break
     return proj_traps
 
+def generate_angelic_shield_pickup(maze, entrance, exit, spawn_chance):
+    angelic_shields = []
+    h, w = maze.shape
+    for r in range(h):
+        for c in range(w):
+            if maze[r, c] == 1 and (r, c) not in (entrance, exit):
+                roll = random.random()
+                if roll < spawn_chance:
+                    angelic_shields.append((r,c))
+                    print("ANGELIC SHIELDS SPAWNED!!!")
+    
+    return angelic_shields
+
 def get_map_settings(score):
     if score > 0 and score % 5 == 0:
         size = BOSS_MAZE_SIZE
@@ -258,7 +355,7 @@ def draw_maze(maze, screen, cell_size, exit_cell, cam_offset, zoom):
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-    pygame.display.set_caption("Maze Runners v0.0.2") # type.version.patch (type: beta 0/indev -1/release 1+)
+    pygame.display.set_caption("Maze Runners v0.0.3") # type.version.patch (type: beta 0/indev -1/release 1+)
     clock = pygame.time.Clock()
     font = pygame.font.SysFont(None, 24)
 
@@ -276,13 +373,18 @@ def main():
     show_all_traps = False
     no_collision = False
     fog_on = True  # Fog is on by default (applies in boss levels)
+    no_shield_damage = False # shield takes no damage if activated
 
     divine_inventory = 0
     divine_state = None  # None, "animating", or "sustain"
     divine_path = []     # List of grid positions for the computed path
     divine_anim_progress = 0.0
-    divine_anim_duration = 5000  # ms for the animation
+    divine_anim_duration = 2000  # ms for the animation
 
+    shield_time = 0.0
+    shield_health = 0
+    shield_on = False
+    
     # create maze
     maze_w, maze_h, trap_prob, crit_chance, proj_chance, boss = get_map_settings(score)
     maze = generate_maze(maze_w, maze_h)
@@ -296,6 +398,14 @@ def main():
                 if maze[r, c] == 0 and (r, c) not in (entrance, exit_cell):
                     if random.random() < DIVINE_EYES_SPAWN_CHANCE:
                         divine_powerups.append((r, c))
+                        
+    shields = []
+    if not maze_w == SMALL_MAZE_SIZE:
+        if maze_w == MEDIUM_MAZE_SIZE:
+            shields = generate_angelic_shield_pickup(maze, entrance, exit_cell, ANGELIC_SHIELD_CHANCE_M + (score/100))
+        elif maze_w == BOSS_MAZE_SIZE:
+            shields = generate_angelic_shield_pickup(maze, entrance, exit_cell, ANGELIC_SHIELD_CHANCE_L)
+    
     projectiles = []
 
     # Calculate cell size so maze fits within game area
@@ -314,6 +424,10 @@ def main():
 
     last_damaged_position = None
     popups = []  # list of dicts: {text, pos, start_time, duration, color}
+    _temp = create_fresnel_texture(ANGELIC_SHIELD_TEXTURE_SIZE, ANGELIC_SHIELD_TEXTURE_SIZE / 2)
+    ANGELIC_SHIELD_TEXTURE = pygame.image.frombuffer(_temp.tobytes(), (ANGELIC_SHIELD_TEXTURE_SIZE, ANGELIC_SHIELD_TEXTURE_SIZE), "RGBA")
+    _temp = None
+    
     #pyi_splash.close()
     running = True
     while running:
@@ -345,6 +459,7 @@ def main():
                     entrance, exit_cell = add_entrance_exit(maze)
                     traps, healing_stations = generate_items(maze, entrance, exit_cell, trap_prob, HEAL_PROBABILITY)
                     projectile_traps = generate_projectile_traps(maze, proj_chance)
+                    
                     divine_powerups = []
                     if maze_w == MEDIUM_MAZE_SIZE:
                         for r in range(maze_h):
@@ -352,6 +467,12 @@ def main():
                                 if maze[r, c] == 0 and (r, c) not in (entrance, exit_cell):
                                     if random.random() < DIVINE_EYES_SPAWN_CHANCE:
                                         divine_powerups.append((r, c))
+                    shields = []          
+                    if not maze_w == SMALL_MAZE_SIZE:
+                        if maze_w == MEDIUM_MAZE_SIZE:
+                            shields = generate_angelic_shield_pickup(maze, entrance, exit_cell, ANGELIC_SHIELD_CHANCE_M + (score/100))
+                        elif maze_w == BOSS_MAZE_SIZE:
+                            shields = generate_angelic_shield_pickup(maze, entrance, exit_cell, ANGELIC_SHIELD_CHANCE_L)
                     projectiles = []
                     cell_size = min(GAME_AREA_WIDTH / maze_w, WINDOW_HEIGHT / maze_h)
                     player_grid = list(entrance)
@@ -428,7 +549,13 @@ def main():
                         damage = TRAP_DAMAGE
                         popup_text = f"-{damage}"
                         popup_color = ORANGE
-                    player_health -= damage
+                    if shield_on:
+                        shield_health -= damage
+                        if shield_health <= 0:
+                            shield_on = False
+                            popup_text = "Shield destroyed! " + popup_text
+                    else:
+                        player_health -= damage
                     popups.append({"text": popup_text, "pos": (player_pixel[0], player_pixel[1]),
                                    "start_time": current_time, "duration": 1000, "color": popup_color})
                     print("Trap triggered! Damage:", damage, "Health:", player_health)
@@ -469,6 +596,13 @@ def main():
                             if random.random() < DIVINE_EYES_SPAWN_CHANCE:
                                 divine_powerups.append((r, c))
                                 print("devinde_powerup spawned")
+            shields = []
+            if not maze_w == SMALL_MAZE_SIZE:
+                if maze_w == MEDIUM_MAZE_SIZE:
+                    shields = generate_angelic_shield_pickup(maze, entrance, exit_cell, ANGELIC_SHIELD_CHANCE_M + (score/100))
+                elif maze_w == BOSS_MAZE_SIZE:
+                    shields = generate_angelic_shield_pickup(maze, entrance, exit_cell, ANGELIC_SHIELD_CHANCE_L)                    
+            
             projectiles = []
             cell_size = min(GAME_AREA_WIDTH / maze_w, WINDOW_HEIGHT / maze_h)
             player_grid = list(entrance)
@@ -572,6 +706,16 @@ def main():
             center_screen = world_to_screen(center_world[0], center_world[1], cam_offset, current_zoom)
             radius = int(cell_size*0.3*current_zoom)
             pygame.draw.circle(screen, YELLOW, center_screen, radius)
+        for sh in shields: # draw shields
+            if True or is_visible(sh, tuple(player_grid), maze):
+                center_world = (sh[1]*cell_size + cell_size/2, sh[0]*cell_size + cell_size/2)
+                center_screen = world_to_screen(center_world[0], center_world[1], cam_offset, current_zoom)
+                desired_diameter = int(cell_size * 0.3 * current_zoom)
+                
+                scaled_texture = get_scaled_texture(ANGELIC_SHIELD_TEXTURE, desired_diameter)
+                texture_rect = scaled_texture.get_rect(center=center_screen)
+                screen.blit(scaled_texture, texture_rect)
+            pass
         for hs in healing_stations:
             world_x = hs[1]*cell_size
             world_y = hs[0]*cell_size
