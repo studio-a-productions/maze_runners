@@ -208,7 +208,8 @@ def get_scaled_texture(base_surface, desired_diameter):
     Returns:
       A new Pygame surface, scaled to (desired_diameter x desired_diameter).
     """
-    return pygame.transform.smoothscale(base_surface, (desired_diameter, desired_diameter))
+    # return pygame.transform.smoothscale(base_surface, (desired_diameter, desired_diameter))
+    return pygame.transform.scale(base_surface, (desired_diameter, desired_diameter))
 
 
 
@@ -362,7 +363,7 @@ def main():
     current_zoom = 1.0
     target_zoom = 1.0
     min_zoom = 1.0
-    max_zoom = 3.0
+    max_zoom = 6.0
     zoom_speed = 0.5  # change per second
     zoom_interp_rate = 5.0
 
@@ -424,7 +425,7 @@ def main():
 
     last_damaged_position = None
     popups = []  # list of dicts: {text, pos, start_time, duration, color}
-    _temp = create_fresnel_texture(ANGELIC_SHIELD_TEXTURE_SIZE, ANGELIC_SHIELD_TEXTURE_SIZE / 2)
+    _temp = create_fresnel_texture(ANGELIC_SHIELD_TEXTURE_SIZE, ANGELIC_SHIELD_TEXTURE_SIZE / 2, F0=0.2, power=3, base_color=(100, 100, 255))
     ANGELIC_SHIELD_TEXTURE = pygame.image.frombuffer(_temp.tobytes(), (ANGELIC_SHIELD_TEXTURE_SIZE, ANGELIC_SHIELD_TEXTURE_SIZE), "RGBA")
     _temp = None
     
@@ -505,9 +506,9 @@ def main():
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_z]:
-            target_zoom = min(target_zoom + zoom_speed * dt / 1000.0, max_zoom)
+            target_zoom = min(target_zoom + zoom_speed * dt * current_zoom / 1000.0, max_zoom)
         if keys[pygame.K_x]:
-            target_zoom = max(target_zoom - zoom_speed * dt / 1000.0, min_zoom)
+            target_zoom = max(target_zoom - zoom_speed * dt * current_zoom / 1000.0, min_zoom)
         current_zoom += (target_zoom - current_zoom) * zoom_interp_rate * (dt / 1000.0)
 
         if not is_animating:
@@ -710,7 +711,7 @@ def main():
             if True or is_visible(sh, tuple(player_grid), maze):
                 center_world = (sh[1]*cell_size + cell_size/2, sh[0]*cell_size + cell_size/2)
                 center_screen = world_to_screen(center_world[0], center_world[1], cam_offset, current_zoom)
-                desired_diameter = int(cell_size * 0.3 * current_zoom)
+                desired_diameter = int(cell_size * current_zoom)
                 
                 scaled_texture = get_scaled_texture(ANGELIC_SHIELD_TEXTURE, desired_diameter)
                 texture_rect = scaled_texture.get_rect(center=center_screen)
